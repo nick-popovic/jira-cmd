@@ -1,0 +1,37 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      /* Basic Debug */
+      {
+        "name": "Regular Debug",
+        "type": "go",
+        "request": "launch",
+        "mode": "auto",
+        "program": "${workspaceFolder}",
+        "env": {},
+        "args": [],
+        "buildFlags": "",
+        "dlvToolPath": "${env:HOME}/go/bin/dlv"
+    },
+  
+      /*
+      * This Version requires a server running:
+      *   dlv debug --headless --listen=:2345 --api-version=2
+      * 
+      * Bubble Tea apps assume control of stdin and stdout.
+      * Could never figure out how to debug 'elegantly' so I
+      * set up a seperate server using the above command and
+      * in debug config, connect to this instance.
+      */
+      {
+        "name": "BubbleTea Debug",
+        "type": "go",
+        "request": "attach",
+        "mode": "remote",
+        "remotePath": "${workspaceFolder}", // The path to your Go project
+        "port": 2345,                       // The port Delve is listening on
+        "host": "127.0.0.1",                // The host Delve is running on
+        "apiVersion": 2                     // Delve API version
+      }
+    ]
+  }
