@@ -23,6 +23,10 @@ The future state of this project aims to provide a unified interface for Jira on
 - [x] The UI renders screen size changes.
 - [x] `esc` exits the application.
 
+# Spinner
+
+<img width="1200" src="./assets/demo.gif" />
+
 ## Known Issues
 
 - **Bug**: Sometimes when the window is 'too small' the last line of rendered output isn't shown ... dont ask me why, I have no idea yet ...
