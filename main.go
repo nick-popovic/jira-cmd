@@ -18,115 +18,135 @@ package main
  */
 
 import (
-	"fmt"
-	"strings"
+	"log"
+
+	"main/helpers"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/mistakenelf/teacup/statusbar"
 )
 
-type rerenderMsg struct{}
-
-func triggerRerender() tea.Msg {
-	return rerenderMsg{}
-}
-
+// model represents the properties of the UI.
 type model struct {
-	textInput textinput.Model
-	viewport  viewport.Model
-	history   []string
-	width     int
-	height    int
+	viewport   viewport.Model
+	textInput  textinput.Model
+	statusbar  statusbar.Model
+	input_mode string
 }
 
-// Initialize the model with default values
-func initialModel() model {
-	ti := textinput.New()
-	ti.Placeholder = "Type a command..."
-	ti.Focus()
-	ti.CharLimit = 156
+// New creates a new instance of the UI.
+func New() model {
 
-	vp := viewport.New(80, 20) // Default viewport size
+	ti := textinput.New()
+	ti.Placeholder = "Type here..."
+	ti.Focus()
+
+	sb := statusbar.New(
+		statusbar.ColorConfig{
+			Foreground: lipgloss.AdaptiveColor{Dark: "#ffffff", Light: "#ffffff"},
+			Background: lipgloss.AdaptiveColor{Light: "#F25D94", Dark: "#F25D94"},
+		},
+		statusbar.ColorConfig{
+			Foreground: lipgloss.AdaptiveColor{Light: "#ffffff", Dark: "#ffffff"},
+			Background: lipgloss.AdaptiveColor{Light: "#3c3836", Dark: "#3c3836"},
+		},
+		statusbar.ColorConfig{
+			Foreground: lipgloss.AdaptiveColor{Light: "#ffffff", Dark: "#ffffff"},
+			Background: lipgloss.AdaptiveColor{Light: "#A550DF", Dark: "#A550DF"},
+		},
+		statusbar.ColorConfig{
+			Foreground: lipgloss.AdaptiveColor{Light: "#ffffff", Dark: "#ffffff"},
+			Background: lipgloss.AdaptiveColor{Light: "#6124DF", Dark: "#6124DF"},
+		},
+	)
 
 	return model{
-		textInput: ti,
-		viewport:  vp,
-		history:   []string{},
-		width:     80,
-		height:    24,
+		statusbar:  sb,
+		viewport:   viewport.Model{},
+		textInput:  ti,
+		input_mode: "INSERT",
 	}
 }
 
-// Bubble Tea's init function (optional)
+// Init intializes the UI.
 func (m model) Init() tea.Cmd {
 	return textinput.Blink
 }
 
-// Update the model based on incoming messages
+// Update handles all UI interactions.
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var (
+		cmd  tea.Cmd
+		cmds []tea.Cmd
+	)
+
 	switch msg := msg.(type) {
-	// Handle window resizing
 	case tea.WindowSizeMsg:
-		m.width = msg.Width
-		m.height = msg.Height
 
-		// Resize viewport and text input based on new dimensions
-		m.viewport.Width = msg.Width - 2
-		m.viewport.Height = msg.Height - 5
-		m.textInput.Width = msg.Width - 4
-		return m, nil
+		m.viewport.Width = msg.Width
+		m.viewport.Height = msg.Height - 2
 
-	// Handle keyboard input
+		m.statusbar.SetSize(msg.Width)
+		m.statusbar.SetContent(m.input_mode, "~/.config/nvim", "1/23", "SB")
+
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "enter":
-			// Process the command when Enter is pressed
-			command := strings.TrimSpace(m.textInput.Value())
-			m.textInput.SetValue("") // Clear the input
-
-			// Add the new command to the history or clear the history
-			if command == "clear" {
-				m.history = []string{}
-
-			} else if command != "" {
-				m.history = append(m.history, command)
-			}
-			m.viewport.SetContent(strings.Join(m.history, "\n"))
-
+		case "ctrl+c", "q":
+			cmds = append(cmds, tea.Quit)
 		case "esc":
-			return m, tea.Quit
+			if m.input_mode == "COMMAND" {
+				m.input_mode = "INSERT"
+				m.statusbar.SetContent(m.input_mode, "~/.config/nvim", "1/23", "SB")
+				m.textInput.Focus()
+			} else if m.input_mode == "INSERT" {
+				m.input_mode = "COMMAND"
+				m.statusbar.SetContent(m.input_mode, "~/.config/nvim", "1/23", "SB")
+				m.textInput.Blur()
+			}
+		case "enter":
+			// Handle enter key pressed
+			if m.input_mode == "INSERT" {
+				// Perform action on enter key pressed in INSERT mode
+				//log.Println("Enter key pressed: ", m.textInput.Value())
+				gpt_res, _ := helpers.GetChatCompletion(m.textInput.Value())
 
+				r, _ := glamour.NewTermRenderer(
+					glamour.WithStandardStyle("dark"),
+					glamour.WithWordWrap(m.viewport.Width),
+				)
+				out, _ := r.Render(gpt_res)
+
+				// sometimes the last line doesnt render properly ...
+				m.viewport.SetContent(out + "\n")
+				m.textInput.SetValue("")
+			}
 		}
-
 	}
 
-	// Update the text input and viewport state
-	var cmd tea.Cmd
-	m.textInput, cmd = m.textInput.Update(msg)
-	m.viewport, _ = m.viewport.Update(msg)
+	// Handle keyboard and mouse events in the viewport
+	m.viewport, cmd = m.viewport.Update(msg)
+	cmds = append(cmds, cmd)
 
-	return m, cmd
+	m.textInput, cmd = m.textInput.Update(msg)
+	cmds = append(cmds, cmd)
+
+	return m, tea.Batch(cmds...)
 }
 
-// View renders the application's UI
+// View returns a string representation of the UI.
 func (m model) View() string {
-	// Define a border style using lipgloss
-	borderStyle := lipgloss.NewStyle().Border(lipgloss.DoubleBorder()).Padding(1, 2)
-
-	// Combine the viewport and input box into a layout
-	return fmt.Sprintf(
-		"%s\n\n%s",
-		borderStyle.Render(m.viewport.View()), // Display history in a bordered box
-		m.textInput.View(),                    // Show the input box
-	)
+	return m.viewport.View() + "\n" + m.textInput.View() + "\n" + m.statusbar.View()
 }
 
 func main() {
-	// Create a new program with window size handling and full-screen mode
-	p := tea.NewProgram(initialModel(), tea.WithAltScreen())
-	if err := p.Start(); err != nil {
-		fmt.Printf("Error: %v\n", err)
+	b := New()
+	p := tea.NewProgram(b, tea.WithAltScreen())
+
+	if _, err := p.Run(); err != nil {
+		log.Fatal(err)
 	}
 }
