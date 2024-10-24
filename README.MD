@@ -7,7 +7,7 @@
 
 ## Introduction
 
-Welcome to the first commit of my project aimed at bringing Jira to the command line and TUI using Bubble Tea and Go. This project is currently in **beta** and is not ready for deployment.
+Welcome to my project aimed at bringing Jira to the command line and TUI using Bubble Tea and Go. This project is currently in **beta** and is not ready for deployment.
 
 ## Project Goals
 
@@ -19,15 +19,13 @@ The future state of this project aims to provide a unified interface for Jira on
 
 ## Current Features
 
-- [x] Users can enter commands (that don't do anything).
-- [x] Commands are displayed above the input area.
+- [x] Users can send queries to ChatGPT and the frontend will render the markdown responce
 - [x] The UI renders screen size changes.
 - [x] `esc` exits the application.
-- [~] `> clear` clears the UI text (see 'Known Issues' Below).
 
 ## Known Issues
 
-- **Clear Command Bug**: When the user executes the `clear` command, the UI fails to re-render the first line visually. However, the command history data is correctly emptied in the backend.
+- **Bug**: Sometimes when the window is 'too small' the last line of rendered output isn't shown ... dont ask me why, I have no idea yet ...
 
 ## Debugging Configuration
 
