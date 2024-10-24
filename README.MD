@@ -23,7 +23,7 @@ The future state of this project aims to provide a unified interface for Jira on
 - [x] The UI renders screen size changes.
 - [x] `esc` exits the application.
 
-# Spinner
+# Demo
 
 <img width="1200" src="./assets/demo.gif" />
 
