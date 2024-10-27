@@ -4,10 +4,10 @@ Output demo.gif
 # Set up a 1200x600 terminal with 46px font.
 Set FontSize 30
 Set Width 1200
-Set Height 1200
+Set Height 900
 
 # Type a command in the terminal.
-Type "go run ."
+Type "go run ../."
 
 # Run the command by pressing enter.
 Enter
@@ -32,7 +32,22 @@ Backspace 45
 
 Type "write me a hello world program in C"
 Enter
-Sleep 20s
+Sleep 5s
+
+# Simulate down arrow key
+Down
+
+# Simulate down arrow key
+Down
+
+# Simulate down arrow key
+Down
+
+# Simulate down arrow key
+Down
+
+
+Sleep 2s
 Type ":)"
 Sleep 2s
 Type "q"
