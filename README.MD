@@ -22,6 +22,7 @@ The future state of this project aims to provide a unified interface for Jira on
 - [x] Users can send queries to ChatGPT and the frontend will render the markdown responce
 - [x] The UI renders screen size changes.
 - [x] `esc` exits the application.
+- [x] Interactive 'Loading ...' is now present so user knows something is running in backround ...
 
 # Demo
 
