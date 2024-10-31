@@ -18,6 +18,7 @@ package main
  */
 
 import (
+	"fmt"
 	"log"
 
 	"main/helpers"
@@ -31,13 +32,25 @@ import (
 	"github.com/mistakenelf/teacup/statusbar"
 )
 
+var (
+	// Tabs data & styling
+	tabs            = []string{"Home", "Profile", "Settings"}
+	tabStyle        = lipgloss.NewStyle().Padding(0, 2).Foreground(lipgloss.Color("#FFF")).Background(lipgloss.Color("#555"))
+	activeTabStyle  = lipgloss.NewStyle().Padding(0, 2).Foreground(lipgloss.Color("#000")).Background(lipgloss.Color("#FFF")).Bold(true)
+	highlightedText = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FFF")).Background(lipgloss.Color("#444"))
+)
+
 // model represents the properties of the UI.
 type model struct {
+	selectedTab int
+
 	loading bool
 	spinner spinner.Model
 
-	viewport   viewport.Model
-	textInput  textinput.Model
+	viewport viewport.Model
+
+	textInput textinput.Model
+
 	statusbar  statusbar.Model
 	input_mode string
 }
@@ -100,7 +113,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 
 		m.viewport.Width = msg.Width
-		m.viewport.Height = msg.Height - 2
+		m.viewport.Height = msg.Height - 3
 
 		m.statusbar.SetSize(msg.Width)
 		m.statusbar.SetContent(m.input_mode, "~/.config/nvim", "1/23", "SB")
@@ -109,6 +122,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 
 		switch msg.String() {
+
+		case "left":
+			if m.selectedTab > 0 {
+				m.selectedTab--
+			}
+		case "right":
+			if m.selectedTab < len(tabs)-1 {
+				m.selectedTab++
+			}
 		case "ctrl+c", "q":
 			cmds = append(cmds, tea.Quit)
 		case "esc":
@@ -163,10 +185,29 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View returns a string representation of the UI.
 func (m model) View() string {
+
+	// Render Tabs
+	var renderedTabs string
+	for i, tab := range tabs {
+		if i == m.selectedTab {
+			renderedTabs += activeTabStyle.Render(tab)
+		} else {
+			renderedTabs += tabStyle.Render(tab)
+		}
+		if i < len(tabs)-1 {
+			renderedTabs += " | "
+		}
+	}
+
+	output := fmt.Sprintf("%s", renderedTabs)
+
 	if m.loading {
 		m.viewport.SetContent(m.spinner.View() + " Loading...")
 	}
-	return m.viewport.View() + "\n" + m.textInput.View() + "\n" + m.statusbar.View()
+
+	output += "\n" + m.viewport.View() + "\n" + m.textInput.View() + "\n" + m.statusbar.View()
+
+	return output
 }
 
 func main() {
