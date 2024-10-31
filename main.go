@@ -18,6 +18,7 @@ package main
  */
 
 import (
+	"fmt"
 	"log"
 
 	"main/helpers"
@@ -29,15 +30,21 @@ import (
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mistakenelf/teacup/statusbar"
+
+	ui "main/ui-components"
 )
 
 // model represents the properties of the UI.
 type model struct {
+	tabs ui.TabModel
+
 	loading bool
 	spinner spinner.Model
 
-	viewport   viewport.Model
-	textInput  textinput.Model
+	viewport viewport.Model
+
+	textInput textinput.Model
+
 	statusbar  statusbar.Model
 	input_mode string
 }
@@ -45,6 +52,7 @@ type model struct {
 // New creates a new instance of the UI.
 func New() model {
 
+	tabs := ui.TabModel{}
 	ti := textinput.New()
 	ti.Placeholder = "Type here..."
 	ti.Focus()
@@ -72,6 +80,7 @@ func New() model {
 	)
 
 	return model{
+		tabs:    tabs,
 		loading: false,
 		spinner: s,
 
@@ -100,7 +109,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 
 		m.viewport.Width = msg.Width
-		m.viewport.Height = msg.Height - 2
+		m.viewport.Height = msg.Height - 3
 
 		m.statusbar.SetSize(msg.Width)
 		m.statusbar.SetContent(m.input_mode, "~/.config/nvim", "1/23", "SB")
@@ -109,6 +118,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 
 		switch msg.String() {
+
 		case "ctrl+c", "q":
 			cmds = append(cmds, tea.Quit)
 		case "esc":
@@ -151,6 +161,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
+	tabsModel, cmd := m.tabs.Update(msg)
+	m.tabs = tabsModel.(ui.TabModel)
+	cmds = append(cmds, cmd)
+
 	// Handle keyboard and mouse events in the viewport
 	m.viewport, cmd = m.viewport.Update(msg)
 	cmds = append(cmds, cmd)
@@ -163,10 +177,18 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View returns a string representation of the UI.
 func (m model) View() string {
+
+	renderedTabs := m.tabs.View()
+
+	output := fmt.Sprintf("%s", renderedTabs)
+
 	if m.loading {
 		m.viewport.SetContent(m.spinner.View() + " Loading...")
 	}
-	return m.viewport.View() + "\n" + m.textInput.View() + "\n" + m.statusbar.View()
+
+	output += "\n" + m.viewport.View() + "\n" + m.textInput.View() + "\n" + m.statusbar.View()
+
+	return output
 }
 
 func main() {

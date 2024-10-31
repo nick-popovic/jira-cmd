@@ -23,6 +23,7 @@ The future state of this project aims to provide a unified interface for Jira on
 - [x] The UI renders screen size changes.
 - [x] `esc` exits the application.
 - [x] Interactive 'Loading ...' is now present so user knows something is running in backround ...
+- [x] Added tabs at the top for horizontal navigation
 
 # Demo
 
@@ -31,6 +32,8 @@ The future state of this project aims to provide a unified interface for Jira on
 ## Known Issues
 
 - **Bug**: Sometimes when the window is 'too small' the last line of rendered output isn't shown ... dont ask me why, I have no idea yet ...
+- **Bug**: Icons not rendering in gif  above ... again dont ask me why, I have no idea yet ...
+
 
 ## Debugging Configuration
 
