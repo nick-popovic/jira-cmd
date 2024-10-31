@@ -30,19 +30,13 @@ import (
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mistakenelf/teacup/statusbar"
-)
 
-var (
-	// Tabs data & styling
-	tabs            = []string{"AI 󰧑", "Search ", "Console 󰆍", "Active Sprint(s) ⚪", "Backlog(s) ", "Risks ⚠", "Dependencies "}
-	tabStyle        = lipgloss.NewStyle().Padding(0, 2).Foreground(lipgloss.Color("#FFF")).Background(lipgloss.Color("#555"))
-	activeTabStyle  = lipgloss.NewStyle().Padding(0, 2).Foreground(lipgloss.Color("#000")).Background(lipgloss.Color("#0F0")).Bold(true)
-	highlightedText = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FFF")).Background(lipgloss.Color("#444"))
+	ui "main/ui-components"
 )
 
 // model represents the properties of the UI.
 type model struct {
-	selectedTab int
+	tabs ui.TabModel
 
 	loading bool
 	spinner spinner.Model
@@ -58,6 +52,7 @@ type model struct {
 // New creates a new instance of the UI.
 func New() model {
 
+	tabs := ui.TabModel{}
 	ti := textinput.New()
 	ti.Placeholder = "Type here..."
 	ti.Focus()
@@ -85,6 +80,7 @@ func New() model {
 	)
 
 	return model{
+		tabs:    tabs,
 		loading: false,
 		spinner: s,
 
@@ -123,14 +119,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		switch msg.String() {
 
-		case "left":
-			if m.selectedTab > 0 {
-				m.selectedTab--
-			}
-		case "right":
-			if m.selectedTab < len(tabs)-1 {
-				m.selectedTab++
-			}
 		case "ctrl+c", "q":
 			cmds = append(cmds, tea.Quit)
 		case "esc":
@@ -173,6 +161,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
+	tabsModel, cmd := m.tabs.Update(msg)
+	m.tabs = tabsModel.(ui.TabModel)
+	cmds = append(cmds, cmd)
+
 	// Handle keyboard and mouse events in the viewport
 	m.viewport, cmd = m.viewport.Update(msg)
 	cmds = append(cmds, cmd)
@@ -186,18 +178,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // View returns a string representation of the UI.
 func (m model) View() string {
 
-	// Render Tabs
-	var renderedTabs string
-	for i, tab := range tabs {
-		if i == m.selectedTab {
-			renderedTabs += activeTabStyle.Render(tab)
-		} else {
-			renderedTabs += tabStyle.Render(tab)
-		}
-		if i < len(tabs)-1 {
-			renderedTabs += " | "
-		}
-	}
+	renderedTabs := m.tabs.View()
 
 	output := fmt.Sprintf("%s", renderedTabs)
 
