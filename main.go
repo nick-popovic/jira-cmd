@@ -34,9 +34,9 @@ import (
 
 var (
 	// Tabs data & styling
-	tabs            = []string{"Home", "Profile", "Settings"}
+	tabs            = []string{"AI 󰧑", "Search ", "Console 󰆍", "Active Sprint(s) ⚪", "Backlog(s) ", "Risks ⚠", "Dependencies "}
 	tabStyle        = lipgloss.NewStyle().Padding(0, 2).Foreground(lipgloss.Color("#FFF")).Background(lipgloss.Color("#555"))
-	activeTabStyle  = lipgloss.NewStyle().Padding(0, 2).Foreground(lipgloss.Color("#000")).Background(lipgloss.Color("#FFF")).Bold(true)
+	activeTabStyle  = lipgloss.NewStyle().Padding(0, 2).Foreground(lipgloss.Color("#000")).Background(lipgloss.Color("#0F0")).Bold(true)
 	highlightedText = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FFF")).Background(lipgloss.Color("#444"))
 )
 
