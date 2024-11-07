@@ -20,6 +20,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"main/helpers"
 
@@ -182,8 +183,14 @@ func (m model) View() string {
 
 	output := fmt.Sprintf("%s", renderedTabs)
 
+	// Display loading message (horiz/vert centered)
 	if m.loading {
-		m.viewport.SetContent(m.spinner.View() + " Loading...")
+		loadingMessage := m.spinner.View() + " Loading..."
+		viewportWidth := m.viewport.Width
+		viewportHeight := m.viewport.Height
+		paddingLeft := (viewportWidth - lipgloss.Width(loadingMessage)) / 2
+		paddingTop := viewportHeight / 2
+		m.viewport.SetContent(fmt.Sprintf("%s%s", strings.Repeat("\n", paddingTop), strings.Repeat(" ", paddingLeft)+loadingMessage))
 	}
 
 	output += "\n" + m.viewport.View() + "\n" + m.textInput.View() + "\n" + m.statusbar.View()
